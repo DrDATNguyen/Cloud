@@ -13,7 +13,7 @@ import (
 )
 
 var db *sql.DB
-var jwtKey = []byte("your_secret_key") // Khóa bí mật để ký JWT
+var jwtKey = []byte("44448888") // Khóa bí mật để ký JWT
 
 // Cấu trúc chứa thông tin người dùng trong token
 type Claims struct {
@@ -90,10 +90,11 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var id int
-	var email, phoneNumber, userName string
+	var email, phoneNumber, userName, pass, address, vipUser string
+	var wallet, credit float64
 
 	// Truy vấn thông tin người dùng từ bảng Users
-	err = db.QueryRow("SELECT ID, Email, PhoneNumber, UserName FROM Users WHERE ID = ?", claims.ID).Scan(&id, &email, &phoneNumber, &userName)
+	err = db.QueryRow("SELECT ID, Email, PhoneNumber, UserName, Pass, Wallet, Credit, Address, VIPuser FROM Users WHERE ID = ?", claims.ID).Scan(&id, &email, &phoneNumber, &userName, &pass, &wallet, &credit, &address, &vipUser)
 	if err != nil {
 		http.Error(w, "Không tìm thấy người dùng", http.StatusNotFound)
 		return
@@ -105,6 +106,11 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		"Email":       email,
 		"PhoneNumber": phoneNumber,
 		"UserName":    userName,
+		"Pass":        pass,
+		"Wallet":      wallet,
+		"Credit":      credit,
+		"Address":     address,
+		"VIPuser":     vipUser,
 	}
 
 	w.Header().Set("Content-Type", "application/json")
