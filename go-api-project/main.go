@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -419,16 +420,24 @@ func profileHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Lấy token từ header Authorization
 	tokenString := r.Header.Get("Authorization")
-	fmt.Println("tokenString", tokenString)
+	fmt.Println("tokenString:", tokenString)
 
 	if tokenString == "" {
 		http.Error(w, "Token không được cung cấp", http.StatusBadRequest)
 		return
 	}
 
+	// Kiểm tra và loại bỏ tiền tố "Bearer "
+	if strings.HasPrefix(tokenString, "Bearer ") {
+		tokenString = strings.TrimPrefix(tokenString, "Bearer ")
+	} else {
+		http.Error(w, "Định dạng token không hợp lệ", http.StatusBadRequest)
+		return
+	}
+
 	// Xác thực token và lấy thông tin người dùng
 	claims, err := getUserFromToken(tokenString)
-	fmt.Println("err", err)
+	fmt.Println("err:", err)
 	if err != nil {
 		http.Error(w, "Token không hợp lệ hoặc đã hết hạn", http.StatusUnauthorized)
 		return
@@ -436,17 +445,18 @@ func profileHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Truy vấn thông tin người dùng từ cơ sở dữ liệu
 	var userInfo struct {
-		UserName    string  `json:"UserName"`
-		Email       string  `json:"Email"`
-		PhoneNumber *int    `json:"PhoneNumber"`
-		Wallet      float64 `json:"Wallet"`
-		Credit      float64 `json:"Credit"`
-		Address     string  `json:"Address"`
-		VIPuser     string  `json:"VIPuser"`
+		UserName    *string  `json:"UserName"`
+		Email       *string  `json:"Email"`
+		PhoneNumber *int     `json:"PhoneNumber"`
+		Wallet      *float64 `json:"Wallet"`
+		Credit      *float64 `json:"Credit"`
+		Address     *string  `json:"Address"`
+		VIPuser     *string  `json:"VIPuser"`
 	}
 
 	err = db.QueryRow("SELECT UserName, Email, PhoneNumber, Wallet, Credit, Address, VIPuser FROM Users WHERE ID = ?", claims.ID).
 		Scan(&userInfo.UserName, &userInfo.Email, &userInfo.PhoneNumber, &userInfo.Wallet, &userInfo.Credit, &userInfo.Address, &userInfo.VIPuser)
+	fmt.Println("err:", err)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			http.Error(w, "Không tìm thấy người dùng", http.StatusNotFound)
