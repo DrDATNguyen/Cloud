@@ -22,6 +22,24 @@ import (
 var db *sql.DB
 var jwtKey = []byte("your_secret_key")
 
+// Middleware xử lý CORS
+func enableCORS(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Thêm tiêu đề CORS
+		w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000") // Cho phép từ localhost:3000
+		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+
+		// Xử lý preflight request của CORS
+		if r.Method == http.MethodOptions {
+			return
+		}
+
+		// Chuyển tiếp đến handler tiếp theo
+		next.ServeHTTP(w, r)
+	})
+}
+
 // Structure to store user information in the token
 type Claims struct {
 	ID    int    `json:"id"`
@@ -116,58 +134,22 @@ func TestJWTFunctions(t *testing.T) {
 
 // Hàm xử lý yêu cầu đăng nhập
 func loginHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodGet {
-		// Xử lý yêu cầu GET với token
-		tokenString := r.URL.Query().Get("token")
-		if tokenString == "" {
-			http.Error(w, "Token không được cung cấp", http.StatusBadRequest)
-			return
-		}
-
-		claims, err := getUserFromToken(tokenString)
-		if err != nil {
-			http.Error(w, "Token không hợp lệ hoặc đã hết hạn", http.StatusUnauthorized)
-			return
-		}
-
-		var id int
-		var email, pass string
-
-		// Truy vấn thông tin người dùng từ bảng Users
-		err = db.QueryRow("SELECT ID, Email, Pass FROM Users WHERE ID = ?", claims.ID).Scan(&id, &email, &pass)
-		if err != nil {
-			if err == sql.ErrNoRows {
-				http.Error(w, "Không tìm thấy người dùng", http.StatusNotFound)
-			} else {
-				http.Error(w, "Lỗi truy vấn cơ sở dữ liệu", http.StatusInternalServerError)
-			}
-			return
-		}
-
-		// Trả về thông tin người dùng dưới dạng JSON
-		userInfo := map[string]interface{}{
-			"Email": email,
-			"Pass":  pass,
-		}
-
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(userInfo)
-		return
-	} else if r.Method == http.MethodPost {
+	if r.Method == http.MethodPost {
 		// Xử lý yêu cầu POST với email và password
 		var requestData struct {
-			Email string `json:"email"`
-			Pass  string `json:"pass"`
+			Email    string `json:"email"`
+			Password string `json:"password"` // Đổi tên thành "password" để đồng nhất với Frontend
 		}
 
 		err := json.NewDecoder(r.Body).Decode(&requestData)
+		fmt.Println("err", err)
 		if err != nil {
 			http.Error(w, "Invalid JSON input", http.StatusBadRequest)
 			return
 		}
 
 		email := requestData.Email
-		password := requestData.Pass
+		password := requestData.Password // Cập nhật lại để sử dụng tên "password"
 
 		if email == "" || password == "" {
 			http.Error(w, "Email và Password là bắt buộc", http.StatusBadRequest)
@@ -265,9 +247,10 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var requestData struct {
-		Email string `json:"email"`
-		Phone string `json:"phone"`
-		Pass  string `json:"pass"`
+		Email    string `json:"email"`
+		UserName string `json:"username"`
+		Phone    string `json:"phone"`
+		Pass     string `json:"pass"`
 	}
 
 	// Phân tích dữ liệu JSON từ yêu cầu
@@ -278,10 +261,11 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	email := requestData.Email
+	userName := requestData.UserName
 	phone := requestData.Phone
 	password := requestData.Pass
 
-	if email == "" || phone == "" || password == "" {
+	if email == "" || userName == "" || phone == "" || password == "" {
 		http.Error(w, "Email, SĐT và Password là bắt buộc", http.StatusBadRequest)
 		return
 	}
@@ -312,7 +296,8 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Thực hiện việc thêm người dùng vào cơ sở dữ liệu
-	_, err = db.Exec("INSERT INTO Users (Email, PhoneNumber, Pass, Token) VALUES (?, ?, ?, ?)", email, phone, hashedPassword, token)
+	_, err = db.Exec("INSERT INTO Users (Email, UserName, PhoneNumber, Pass, Token) VALUES (?, ?, ?, ?,?)", email, userName, phone, hashedPassword, token)
+	fmt.Printf("err", err)
 	if err != nil {
 		http.Error(w, "Lỗi khi đăng ký người dùng", http.StatusInternalServerError)
 		return
@@ -320,11 +305,12 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Trả về thông tin người dùng và thông báo thành công
 	userInfo := map[string]interface{}{
-		"ID":      newID,
-		"Email":   email,
-		"Phone":   phone,
-		"Token":   token,
-		"Message": "Đăng ký thành công",
+		"ID":       newID,
+		"UserName": userName,
+		"Email":    email,
+		"Phone":    phone,
+		"Token":    token,
+		"Message":  "Đăng ký thành công",
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -474,8 +460,9 @@ func profileHandler(w http.ResponseWriter, r *http.Request) {
 func main() {
 	initDB()
 	defer db.Close()
-	http.HandleFunc("/register", registerHandler)
-	http.HandleFunc("/login", loginHandler)
+
+	http.Handle("/register", enableCORS(http.HandlerFunc(registerHandler)))
+	http.Handle("/login", enableCORS(http.HandlerFunc(loginHandler)))
 	http.HandleFunc("/change-password", changePasswordHandler)
 	http.HandleFunc("/profile", profileHandler)
 	TestJWTFunctions(nil)
