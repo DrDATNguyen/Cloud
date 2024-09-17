@@ -1,0 +1,258 @@
+.App {
+  text-align: center;
+}
+
+.App-logo {
+  height: 40vmin;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .App-logo {
+    animation: App-logo-spin infinite 20s linear;
+  }
+}
+
+.App-header {
+  background-color: #282c34;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  color: white;
+}
+
+.App-link {
+  color: #61dafb;
+}
+
+@keyframes App-logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Container and Box */
+.box-login {
+  background-color: #ffffff;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+/* Left Section - Promotional Image */
+.login-left {
+  background-color: #e9f7fe;
+  height: 100%;
+  padding: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.promotion-container {
+  position: relative;
+  width: 100%;
+  text-align: center;
+}
+
+.slides-container {
+  margin-top: 15px;
+}
+
+.slide-image {
+  width: 100%;
+  border-radius: 10px;
+}
+
+.dot {
+  cursor: pointer;
+  height: 15px;
+  width: 15px;
+  margin: 0 2px;
+  background-color: #bbb;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.dot.active {
+  background-color: #717171;
+}
+
+/* Right Section - Login Form */
+.login-right {
+  padding: 30px;
+  background-color: #f8f9fa;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.form-container {
+  width: 100%;
+  max-width: 400px;
+}
+
+.logo-login {
+  margin-bottom: 20px;
+}
+
+.login-title {
+  font-size: 24px;
+  margin-bottom: 20px;
+  font-weight: bold;
+  text-align: center;
+}
+
+/* Input and Button Styles */
+.form-control-login {
+  width: 100%;
+  padding: 10px;
+  margin-top: 5px;
+  margin-bottom: 15px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-size: 16px;
+}
+
+.label-login {
+  font-weight: bold;
+  margin-bottom: 5px;
+  display: block;
+}
+
+.submit {
+  background-color: #007bff;
+  border: none;
+  color: #fff;
+  font-size: 16px;
+  padding: 10px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.submit:hover {
+  background-color: #0056b3;
+}
+
+/* Additional Styles */
+.remember-forgot {
+  margin: 10px 0;
+}
+
+.checkbox-wrap {
+  margin-left: 5px;
+  font-size: 14px;
+}
+
+.text-forgot-pass {
+  font-size: 14px;
+}
+
+.login-bottom {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.sign-up-now {
+  color: #007bff;
+  font-weight: bold;
+}
+
+.sign-up-now:hover {
+  text-decoration: underline;
+}
+
+.div-account {
+  margin: 20px 0;
+}
+
+.icon img {
+  width: 40px;
+  margin: 0 10px;
+}
+
+.text-social {
+  margin-top: 15px;
+  font-size: 14px;
+  color: #007bff;
+}
+
+.text-social a:hover {
+  text-decoration: underline;
+}
+/* Loader Spinner */
+#loader_spinner {
+  opacity: 0.8;
+  position: fixed;
+  left: 0px;
+  top: 0px;
+  width: 100%;
+  height: 100%;
+  z-index: 9999;
+  background: url('https://kdata.vn//kdata/images/spinner.gif') 50% 50% no-repeat #ffffff;
+}
+
+/* Markdown Body */
+.markdown-body[data-v-6cac2965] {
+text-size-adjust: 100%;
+color: #24292f;
+background-color: #fff;
+font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial,
+  sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji';
+line-height: 1.5;
+overflow-wrap: break-word;
+margin: 0px;
+font-size: 14px;
+text-align: left;
+}
+
+/* Ng Icon Styles */
+.ng-icon[data-v-6cac2965] {
+position: fixed;
+cursor: grab;
+right: 0px;
+top: 100px;
+z-index: 99999;
+will-change: transform;
+transform: translateZ(0);
+display: flex;
+flex-direction: column;
+align-items: center;
+}
+.ng-icon:hover .ng-close-button[data-v-6cac2965] {
+display: block;
+}
+.ng-icon .ng-close-button[data-v-6cac2965] {
+display: none;
+position: absolute;
+top: -12px;
+left: -10px;
+cursor: pointer;
+color: rgb(165, 165, 165);
+font-size: 18px;
+z-index: 2005;
+}
+
+/* Additional Styles Here... */
+
+/* Copy Button */
+#_copy {
+  align-items: center;
+  background: #4494d5;
+  border-radius: 3px;
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  font-size: 13px;
+  height: 30px;
+  justify-content: center;
+  position: absolute;
+  width: 60px;
+  z-index: 1000;
+}
