@@ -7,16 +7,19 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"math/rand"
 	"net/http"
 	"os"
 	"regexp"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/joho/godotenv"
 
 	_ "github.com/go-sql-driver/mysql"
+	"gopkg.in/gomail.v2"
 )
 
 var db *sql.DB
@@ -456,6 +459,224 @@ func profileHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(userInfo)
 }
+func sendEmail(to string, subject string, body string) error {
+	m := gomail.NewMessage()
+	m.SetHeader("From", "nguyendatdeptrai21092003@gmail.com")
+	m.SetHeader("To", to)
+	m.SetHeader("Subject", subject)
+	m.SetBody("text/plain", body)
+
+	d := gomail.NewDialer("smtp.gmail.com", 587, "nguyendatdeptrai21092003@gmail.com", "Dat210903@")
+	return d.DialAndSend(m)
+}
+
+func generateRandomCode() string {
+	rand.Seed(time.Now().UnixNano())
+	code := rand.Intn(900000) + 100000 // Generate a 6-digit random number
+	return fmt.Sprintf("%06d", code)
+}
+
+func lostPassHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodPost {
+		var requestData struct {
+			Email   string `json:"email"`
+			Code    string `json:"code"`
+			NewPass string `json:"new_pass"`
+		}
+
+		// Phân tích dữ liệu JSON từ yêu cầu
+		err := json.NewDecoder(r.Body).Decode(&requestData)
+		if err != nil {
+			http.Error(w, "Dữ liệu JSON không hợp lệ", http.StatusBadRequest)
+			return
+		}
+
+		email := requestData.Email
+		code := requestData.Code
+		newPass := requestData.NewPass
+
+		if email != "" && code == "" && newPass == "" {
+			// Xử lý yêu cầu gửi mã xác nhận
+			var id int
+			// var storedEmail string
+
+			// Kiểm tra email có tồn tại không
+			err = db.QueryRow("SELECT ID FROM Users WHERE Email = ?", email).Scan(&id)
+			if err != nil {
+				if err == sql.ErrNoRows {
+					http.Error(w, "Email không tồn tại", http.StatusNotFound)
+				} else {
+					http.Error(w, "Lỗi truy vấn cơ sở dữ liệu", http.StatusInternalServerError)
+				}
+				return
+			}
+
+			// Tạo mã xác nhận và gửi email
+			code := generateRandomCode()
+			subject := "Mã xác nhận đổi mật khẩu"
+			body := fmt.Sprintf("Mã xác nhận của bạn là: %s", code)
+			err = sendEmail(email, subject, body)
+			fmt.Println(err)
+			if err != nil {
+				http.Error(w, "Lỗi khi gửi email", http.StatusInternalServerError)
+				return
+			}
+
+			// Lưu mã xác nhận vào cơ sở dữ liệu hoặc bộ nhớ tạm thời (ví dụ: Redis, bộ nhớ máy chủ, v.v.)
+			// Đây chỉ là ví dụ, hãy thay đổi cách lưu mã xác nhận tùy theo yêu cầu của bạn
+
+			// Trả về thông báo thành công
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(map[string]string{"Message": "Mã xác nhận đã được gửi"})
+			return
+		}
+
+		if email != "" && code != "" && newPass == "" {
+			// Xử lý yêu cầu xác nhận mã và đổi mật khẩu
+			var storedCode string
+			// var id int
+			// var storedPassword string
+
+			// Kiểm tra mã xác nhận
+			// Đây chỉ là ví dụ, hãy thay đổi cách lưu mã xác nhận tùy theo yêu cầu của bạn
+			// so sánh mã xác nhận nhập vào với mã lưu trong cơ sở dữ liệu hoặc bộ nhớ tạm thời
+
+			if code != storedCode {
+				http.Error(w, "Mã xác nhận không hợp lệ", http.StatusUnauthorized)
+				return
+			}
+
+			// Nếu mã xác nhận đúng, cho phép thay đổi mật khẩu
+			if !isStrongPassword(newPass) {
+				http.Error(w, "Mật khẩu mới phải dài ít nhất 12 ký tự và bao gồm chữ hoa, chữ thường, số và ký hiệu đặc biệt", http.StatusBadRequest)
+				return
+			}
+
+			// Mã hóa mật khẩu mới
+			hashedNewPassword := hashPassword(newPass)
+
+			// Cập nhật mật khẩu mới vào cơ sở dữ liệu
+			_, err = db.Exec("UPDATE Users SET Pass = ? WHERE Email = ?", hashedNewPassword, email)
+			if err != nil {
+				http.Error(w, "Lỗi khi cập nhật mật khẩu", http.StatusInternalServerError)
+				return
+			}
+
+			// Trả về thông báo thành công
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(map[string]string{"Message": "Mật khẩu đã được thay đổi thành công"})
+			return
+		}
+
+		http.Error(w, "Dữ liệu không hợp lệ", http.StatusBadRequest)
+		return
+	}
+
+	http.Error(w, "Phương thức không được hỗ trợ", http.StatusMethodNotAllowed)
+}
+func getTypeOfProductsHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Chỉ cho phép phương thức GET", http.StatusMethodNotAllowed)
+		return
+	}
+
+	rows, err := db.Query("SELECT ID, TypeProduct, Descriptions, parentId FROM TypeOfproducts")
+	fmt.Println(err)
+	if err != nil {
+		http.Error(w, "Lỗi khi truy vấn cơ sở dữ liệu", http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	var types []map[string]interface{}
+	for rows.Next() {
+		var id, parentId int
+		var typeProduct string
+		var descriptions *string
+		if err := rows.Scan(&id, &typeProduct, &descriptions, &parentId); err != nil {
+			http.Error(w, "Lỗi khi đọc dữ liệu", http.StatusInternalServerError)
+			return
+		}
+		types = append(types, map[string]interface{}{
+			"ID":           id,
+			"TypeProduct":  typeProduct,
+			"Descriptions": descriptions,
+			"parentId":     parentId,
+		})
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(types)
+}
+func getProductsHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Chỉ cho phép phương thức GET", http.StatusMethodNotAllowed)
+		return
+	}
+
+	rows, err := db.Query("SELECT ID, NameProduct, Descriptions, parent FROM products")
+	if err != nil {
+		http.Error(w, "Lỗi khi truy vấn cơ sở dữ liệu", http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	var products []map[string]interface{}
+	for rows.Next() {
+		var id, parent int
+		var nameProduct, descriptions string
+		if err := rows.Scan(&id, &nameProduct, &descriptions, &parent); err != nil {
+			http.Error(w, "Lỗi khi đọc dữ liệu", http.StatusInternalServerError)
+			return
+		}
+		products = append(products, map[string]interface{}{
+			"ID":           id,
+			"NameProduct":  nameProduct,
+			"Descriptions": descriptions,
+			"parent":       parent,
+		})
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(products)
+}
+func getProductsPackageHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Chỉ cho phép phương thức GET", http.StatusMethodNotAllowed)
+		return
+	}
+
+	rows, err := db.Query("SELECT ID, NameProduct, RAM, CPU, Storage, Price, ProductID FROM productsPackage")
+	if err != nil {
+		http.Error(w, "Lỗi khi truy vấn cơ sở dữ liệu", http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	var packages []map[string]interface{}
+	for rows.Next() {
+		var id int
+		var nameProduct, ram, cpu, storage string
+		var price float64
+		var productID int
+		if err := rows.Scan(&id, &nameProduct, &ram, &cpu, &storage, &price, &productID); err != nil {
+			http.Error(w, "Lỗi khi đọc dữ liệu", http.StatusInternalServerError)
+			return
+		}
+		packages = append(packages, map[string]interface{}{
+			"ID":          id,
+			"NameProduct": nameProduct,
+			"RAM":         ram,
+			"CPU":         cpu,
+			"Storage":     storage,
+			"Price":       price,
+			"ProductID":   productID,
+		})
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(packages)
+}
 
 func main() {
 	initDB()
@@ -465,6 +686,11 @@ func main() {
 	http.Handle("/login", enableCORS(http.HandlerFunc(loginHandler)))
 	http.HandleFunc("/change-password", changePasswordHandler)
 	http.HandleFunc("/profile", profileHandler)
+	http.HandleFunc("/lostPass", lostPassHandler)
+	http.HandleFunc("/type-of-products", getTypeOfProductsHandler)
+	http.HandleFunc("/products", getProductsHandler)
+	http.HandleFunc("/products-package", getProductsPackageHandler)
+
 	TestJWTFunctions(nil)
 	fmt.Println("Server is running on http://localhost:8080...")
 	http.ListenAndServe(":8080", nil)
