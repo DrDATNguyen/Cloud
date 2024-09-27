@@ -1,0 +1,306 @@
+/* Container chung cho Dashboard */
+.dashboard-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh; /* Đảm bảo chiều cao tối thiểu toàn trang */
+  background-color: #f4f7fa; /* Màu nền mềm mại hơn */
+}
+
+/* Header hoặc User Section */
+.dashboard-user {
+  background-color: #f8f8f8;
+  padding: 15px; /* Tăng padding cho khoảng cách rộng rãi hơn */
+  border-bottom: 2px solid #ddd; /* Thêm viền cho rõ phần header */
+}
+
+/* Navigation Button */
+.navbar button {
+  margin-right: 15px; /* Tăng khoảng cách giữa các nút */
+  padding: 10px 15px; /* Tạo khoảng padding rộng hơn để nút nhìn thoải mái hơn */
+  background-color: #3498db; /* Màu nền nút */
+  color: white; /* Màu chữ nút */
+  border: none;
+  border-radius: 5px; /* Tạo bo tròn nút */
+  cursor: pointer;
+}
+
+.navbar button:hover {
+  background-color: #2980b9; /* Màu khi hover */
+}
+
+/* Main content (Sidebar + Main Panel) */
+.content {
+  display: flex;
+  flex-grow: 1;
+  background-color: #fff; /* Tạo màu nền trắng cho phần nội dung */
+}
+
+/* Sidebar */
+.sidebar {
+  width: 250px; /* Đặt kích thước cố định thay vì phần trăm */
+  background-color: #2c3e50;
+  color: white;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+.sidebar ul li {
+  margin-bottom: 15px; /* Thêm khoảng cách giữa các mục */
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.sidebar ul li:hover {
+  cursor: pointer;
+  text-decoration: underline; /* Tạo hiệu ứng hover */
+}
+
+/* Main Panel */
+.main-panel {
+  flex-grow: 1;
+  padding: 25px;
+  background-color: #fff;
+  border-left: 1px solid #ddd; /* Thêm viền ngăn giữa sidebar và main panel */
+}
+
+/* Service and Package Layout */
+.service-type, .service-packages {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 30px; /* Tăng khoảng cách từ trên xuống */
+  flex-wrap: wrap; /* Đảm bảo các thẻ có thể xuống hàng trên màn hình nhỏ */
+}
+
+.service-card, .package-card {
+  background-color: #ecf0f1;
+  padding: 20px;
+  border-radius: 10px; /* Tăng bo góc cho mềm mại hơn */
+  text-align: center;
+  flex: 1;
+  margin: 10px;
+  max-width: 300px; /* Giới hạn kích thước tối đa của thẻ */
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1); /* Thêm hiệu ứng đổ bóng */
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .content {
+    flex-direction: column; /* Stack sidebar and main panel vertically on smaller screens */
+  }
+
+  .sidebar {
+    width: 100%; /* Sidebar sẽ chiếm toàn bộ chiều rộng khi màn hình nhỏ */
+    border-bottom: 1px solid #ddd; /* Thêm viền ngăn cách với main panel */
+  }
+
+  .main-panel {
+    width: 100%;
+  }
+
+  .service-type, .service-packages {
+    flex-direction: column; /* Đặt các thẻ thành một cột trên màn hình nhỏ */
+  }
+}
+.row {
+  display: flex;
+  justify-content: center;
+  margin: 20px 0;
+}
+
+.col-md-12 {
+  width: 100%;
+}
+
+.title-label {
+  font-size: 20px;
+  font-weight: bold;
+  margin-bottom: 10px;
+  display: inline-block;
+  text-transform: uppercase;
+  border-bottom: 2px solid #000;
+}
+
+.content-build {
+  display: flex;
+  justify-content: center;
+}
+
+.box-carousel {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.box-container-package {
+  display: flex;
+}
+
+.block-always-show-package {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.item {
+  text-align: center;
+}
+
+.box-item {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.box-item:hover {
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.box-item.active {
+  border-color: #007bff;
+}
+
+.arrow-left {
+  width: 0;
+  height: 0;
+  border-top: 10px solid transparent;
+  border-bottom: 10px solid transparent;
+  border-right: 10px solid #007bff;
+  position: absolute;
+  left: -10px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.fa-check {
+  color: #007bff;
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: none;
+}
+
+.box-item.active .fa-check {
+  display: block;
+}
+
+.name-1 img {
+  width: 100%;
+  max-width: 100px;
+  margin-bottom: 5px;
+}
+
+.price-1 {
+  font-size: 16px;
+  font-weight: bold;
+}
+.spacing-between-items {
+  margin-right: 70px; /* Tăng khoảng cách bên phải của mỗi thẻ */
+}
+
+.aside {
+  border: 1px solid #e0e0e0;
+  border-radius: 5px;
+  padding: 15px;
+  max-width: 300px;
+  margin: auto;
+  background-color: #fff;
+}
+
+/* Title styling */
+.title-head {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+/* Box styling for each section */
+.box-aside {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  padding: 10px;
+  border: 1px solid #f0f0f0;
+  border-radius: 5px;
+}
+
+/* Title and values */
+.title {
+  font-weight: 600;
+  color: #0066cc;
+}
+
+.original_monthly, .price_discount, .aside-total-price, .aside-total-price-vat {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+/* Discount styling */
+.discount_info .price_discount {
+  text-align: right;
+  color: #ff6600;
+}
+
+.percent-price_discount {
+  background-color: #ffcc99;
+  border-radius: 5px;
+  padding: 2px 8px;
+  font-size: 14px;
+  margin-right: 5px;
+}
+
+.price_discount .aside-total-price_discount {
+  color: #ff0000;
+}
+
+/* Total price */
+.aside-total-price {
+  color: #4CAF50;
+}
+
+/* VAT and other text styling */
+.aside-total-price-vat, .x_tuong_duong {
+  color: #000;
+  font-weight: bold;
+}
+
+/* Styling for button */
+#deploy_now {
+  background-color: #a8e6cf;
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 600;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: background-color 0.3s ease;
+}
+
+#deploy_now:hover {
+  background-color: #81c784;
+}
+
+/* Optional: Custom responsive design */
+@media (max-width: 480px) {
+  .aside {
+    padding: 10px;
+    max-width: 100%;
+  }
+
+  .box-aside {
+    flex-direction: column;
+    text-align: center;
+  }
+}

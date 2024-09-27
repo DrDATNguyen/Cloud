@@ -127,7 +127,12 @@ const DashboardUser = () => {
 
 
 const Sidebar = () => {
- 
+  const [isDropdownOpen, setDropdownOpen] = useState(true); // State để điều khiển hiển thị dropdown
+
+  const toggleDropdown = () => {
+    setDropdownOpen(!isDropdownOpen);
+  };
+  
   return (
     <div className="sidebar">
         <div className="logo">
@@ -583,6 +588,204 @@ const MainPanel = () => {
   );
 };
 
+const Aside = () => {
+  return (
+    <div className="aside">
+      {/* Hidden Input */}
+      <input type="hidden" id="aside-total-price-qty" value="378000" />
+
+      {/* Sidebar Box */}
+      <div className="box-sidebar">
+        {/* Order Summary Title */}
+        <div className="title-head text-uppercase">Order Summary</div>
+
+        {/* Order Price */}
+        <div className="content">
+          <div className="box-aside">
+            <div className="title">Đơn giá:</div>
+            <div className="original_monthly">
+              <span className="aside-total-price-before">540,000</span>
+            </div>
+          </div>
+
+          {/* Quantity */}
+          <div className="box-aside" style={{ display: 'none' }}>
+            Số lượng <span className="x_qty">1</span>
+          </div>
+        </div>
+
+        {/* Discount Information */}
+        <div className="content discount_info" style={{ display: 'block' }}>
+          <div className="box-aside">
+            <div className="title">Giảm chu kỳ:</div>
+            <div className="price_discount">
+              <span className="percent-price_discount">Giảm 30%</span>
+              <br />
+              <span className="aside-total-price_discount">- 162,000</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Coupon Promotion */}
+        <div className="content promotion_info" style={{ display: 'none' }}>
+          <div className="box-aside">
+            <div className="title">Giảm mã Coupon:</div>
+            <span
+              className="aside-total-price-qty-promotion"
+              style={{ fontWeight: 'bold', color: '#000000' }}
+            >
+              -65,400
+            </span>
+          </div>
+          <div className="box-aside">
+            <small>
+              <p>
+                Giảm 20% hóa đơn đầu tiên các gói Cloud Hosting chu kỳ 3 &amp; 6 tháng tại KDATA
+              </p>
+            </small>
+          </div>
+        </div>
+
+        {/* Points Information */}
+        <div className="content points_info" style={{ display: 'none' }}>
+          <div className="box-aside">
+            <div className="title">Điểm tích luỹ:</div>
+            <div className="price_discount" style={{ textAlign: 'right' }}>
+              <span className="points_discount">- 10</span>
+              <br />
+              <span
+                className="aside-total-price-qty-promotion"
+                style={{ fontWeight: 'bold', color: '#000000' }}
+              >
+                -65,400
+              </span>
+            </div>
+          </div>
+          <div className="box-aside">
+            <small>
+              <p>1 điểm tương đương 10 vnđ</p>
+            </small>
+          </div>
+        </div>
+
+        {/* VAT Section */}
+        <div className="content box-aside">
+          <div className="title">VAT:</div>
+          <span className="aside-total-price-vat" style={{ fontWeight: 'bold', color: '#000000' }}>
+            37,800
+          </span>
+        </div>
+
+        {/* Total Price */}
+        <div className="content" style={{ marginBottom: 0 }}>
+          <div className="box-aside">
+            <div className="title">Thành tiền:</div>
+            <span className="aside-total-price" style={{ fontWeight: 'bold', color: '#000000' }}>
+              415,800
+            </span>
+          </div>
+          <div className="box-aside">
+            <small>Tương đương</small>
+            <small className="x_tuong_duong">10,500/ tháng + VAT</small>
+          </div>
+        </div>
+
+        {/* Currency Unit */}
+        <small>(Đơn vị tính: VNĐ)</small>
+      </div>
+
+      {/* Deploy Button */}
+      <div className="sum_deploy">
+        <div className="deploy_now" style={{ textAlign: 'right' }}>
+          <div className="update ml-auto mr-auto">
+            <button type="submit" className="btn btn-primary btn-block" id="deploy_now">
+              Khởi tạo
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+  
+};
+
+const BillingCycle = () => {
+  return (
+    <div className="get_billing_cycle">
+      <div className="row">
+        <div className="col-md-12">
+          <div className="row">
+            <div className="col-md-12">
+              <label className="control-label title-label" htmlFor="package">CHU KỲ</label>
+              <div className="content-build">
+                <div className="col-md-12">
+                  <div className="tab-content">
+                    <div className="row">
+                      <div className="panel panel-default panel-accent-asbestos" style={{ marginBottom: '10px' }}>
+                        <div className="card-body">
+                          <div className="row list-item-service">
+                            {/* Lựa chọn chu kỳ 3 tháng */}
+                            <div className="col-md-4 col-sm-6">
+                              <div className="list__item radio_choice_month">
+                                <input type="radio" className="radio-btn" name="choice_month" value="3" data-discount="0" id="3month-opt" disabled />
+                                <label htmlFor="3month-opt" className="label">3 Tháng</label>
+                              </div>
+                            </div>
+
+                            {/* Lựa chọn chu kỳ 6 tháng */}
+                            <div className="col-md-4 col-sm-6">
+                              <div className="list__item radio_choice_month">
+                                <input type="radio" className="radio-btn" name="choice_month" value="6" data-discount="0" id="6month-opt" disabled />
+                                <label htmlFor="6month-opt" className="label">6 Tháng</label>
+                              </div>
+                            </div>
+
+                            {/* Lựa chọn chu kỳ 12 tháng */}
+                            <div className="col-md-4 col-sm-6">
+                              <div className="list__item radio_choice_month">
+                                <input type="radio" className="radio-btn" name="choice_month" value="12" data-discount="10" id="12month-opt" />
+                                <label htmlFor="12month-opt" className="label">
+                                  12 Tháng
+                                  <span className="cloud-vps-discount">-10 %</span>
+                                </label>
+                              </div>
+                            </div>
+
+                            {/* Lựa chọn chu kỳ 24 tháng */}
+                            <div className="col-md-4 col-sm-6">
+                              <div className="list__item radio_choice_month">
+                                <input type="radio" className="radio-btn" name="choice_month" value="24" data-discount="15" id="24month-opt" />
+                                <label htmlFor="24month-opt" className="label">
+                                  24 Tháng
+                                  <span className="cloud-vps-discount">-15 %</span>
+                                </label>
+                              </div>
+                            </div>
+
+                            {/* Lựa chọn chu kỳ 36 tháng */}
+                            <div className="col-md-4 col-sm-6">
+                              <div className="list__item radio_choice_month">
+                                <input type="radio" className="radio-btn" name="choice_month" value="36" data-discount="30" id="36month-opt" defaultChecked />
+                                <label htmlFor="36month-opt" className="label">
+                                  36 Tháng
+                                  <span className="cloud-vps-discount">-30%</span>
+                                </label>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const Dashboard = () => {
   return (
@@ -591,6 +794,8 @@ const Dashboard = () => {
       <div className="content">
         <Sidebar />
        <MainPanel/>
+       <Aside/>
+       <BillingCycle />
       </div>
     </div>
   );
