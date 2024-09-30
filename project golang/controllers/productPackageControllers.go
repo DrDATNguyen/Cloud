@@ -4,74 +4,153 @@ import (
 	"myproject/initializers"
 	"myproject/models"
 	"net/http"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
 
-func GetProductPackageByProductID(c *gin.Context) {
-	// Lấy ID từ params
-	productIDParam := c.Param("id")
-	productID, err := strconv.Atoi(productIDParam) // Chuyển ID từ dạng string sang integer rồi lưu vào biến productID
-	if err != nil {
-		// Nếu có lỗi thì trả về error
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "Invalid product ID",
-		})
-		return
-	}
+func SeeProductsPackage(c *gin.Context) {
+	var packages []models.ProductsPackage
 
-	// Tạo biến productPackages để lưu lại dữ liệu tìm được
-	var productPackages []models.ProductsPackage
-	// Tìm productPackage dựa vào ProductID
-	if err := initializers.DB.Where("product_id = ?", productID).Find(&productPackages).Error; err != nil {
+	// Retrieve all packages from the database
+	if err := initializers.DB.Find(&packages).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "Failed to retrieve product packages",
 		})
 		return
 	}
 
-	// Nếu Product đó không có bất cứ dữ liệu productPackage nào thì trả về message
-	if len(productPackages) == 0 {
-		c.JSON(http.StatusNotFound, gin.H{
-			"message": "No product packages found for this product ID",
-		})
-		return
-	}
-
-	// Trả về thông tin Product Package khi tìm thành công
 	c.JSON(http.StatusOK, gin.H{
-		"product_packages": productPackages,
+		"packages": packages,
 	})
 }
 
-func GetProductPackageInfo(c *gin.Context) {
-	// Lấy Id từ param
-	idParam := c.Param("id")
+func SeeProductsPackageByProductSlug(c *gin.Context) {
+	productSlug := c.Param("slug") // Get the slug from URL parameters
 
-	// Chuyển đổi id từ string sang integer và lưu vào biến id
-	id, err := strconv.Atoi(idParam)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			// Báo lỗi nếu có sai sót khi chuyển đổi
-			"error": "Invalid ID format",
+	var product models.Product
+	// Find the product by its slug
+	if err := initializers.DB.Where("slug = ?", productSlug).First(&product).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"error": "Product not found",
 		})
 		return
 	}
 
-	var productPackage models.ProductsPackage
+	var packages []models.ProductsPackage
+	// Find all packages associated with the product's ID
+	if err := initializers.DB.Where("product_id = ?", product.ID).Find(&packages).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to retrieve product packages",
+		})
+		return
+	}
 
-	// Lấy product package từ database thông qua ID
-	if result := initializers.DB.Preload("Product").First(&productPackage, id); result.Error != nil {
+	c.HTML(http.StatusOK, "productPackage.html", gin.H{
+		"product":  product.Name,
+		"packages": packages,
+	})
+}
+
+func AddProductsPackage(c *gin.Context) {
+	var productsPackage models.ProductsPackage
+
+	// Bind JSON body to the struct
+	if err := c.BindJSON(&productsPackage); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Invalid request format",
+		})
+		return
+	}
+
+	// Validate required fields
+	if productsPackage.NameProductPackage == "" || productsPackage.Price <= 0 || productsPackage.ProductID == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Name, Price, and ProductID fields are required",
+		})
+		return
+	}
+
+	// Add to the database
+	if err := initializers.DB.Create(&productsPackage).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to add product package",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Product package added successfully",
+		"package": productsPackage,
+	})
+}
+
+func UpdateProductsPackage(c *gin.Context) {
+	// Get the ID from the URL parameter
+	id := c.Param("id")
+
+	var productsPackage models.ProductsPackage
+
+	// Find the existing package by ID
+	if err := initializers.DB.First(&productsPackage, id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{
-			// Báo lỗi nếu tồn tại result.Error đồng nghĩa với có lỗi khi tìm dữ liệu trong database
 			"error": "Product package not found",
 		})
 		return
 	}
 
-	// Trả về thông tin product Package
+	// Bind the updated data to the struct
+	if err := c.BindJSON(&productsPackage); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Invalid request format",
+		})
+		return
+	}
+
+	// Validate required fields
+	if productsPackage.NameProductPackage == "" || productsPackage.Price <= 0 || productsPackage.ProductID == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Name, Price, and ProductID fields are required",
+		})
+		return
+	}
+
+	// Save the updated package
+	if err := initializers.DB.Save(&productsPackage).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to update product package",
+		})
+		return
+	}
+
 	c.JSON(http.StatusOK, gin.H{
-		"productPackage": productPackage,
+		"message": "Product package updated successfully",
+		"package": productsPackage,
+	})
+}
+
+func DeleteProductsPackage(c *gin.Context) {
+	// Get the ID from the URL parameter
+	id := c.Param("id")
+
+	var productsPackage models.ProductsPackage
+
+	// Find the package by ID
+	if err := initializers.DB.First(&productsPackage, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"error": "Product package not found",
+		})
+		return
+	}
+
+	// Delete the package
+	if err := initializers.DB.Delete(&productsPackage).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to delete product package",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Product package deleted successfully",
 	})
 }

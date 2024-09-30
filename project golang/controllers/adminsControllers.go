@@ -14,12 +14,12 @@ import (
 func AddAdmin(c *gin.Context) {
 	// tạo biến để chứa input data
 	var body struct {
-		Username    string `json:"username"`
-		Password    string `json:"password"`
-		Email       string `json:"email"`
-		Address     string `json:"address"`
-		VipAdmin    string `json:"vipAdmin"`
-		PhoneNumber string `json:"phoneNumber"`
+		Username string `json:"username"`
+		Password string `json:"password"`
+		// Email       string `json:"email"`
+		// Address     string `json:"address"`
+		// VipAdmin    string `json:"vipAdmin"`
+		// PhoneNumber string `json:"phoneNumber"`
 	}
 
 	// lưu các input data vào biến vừa tạo
@@ -31,12 +31,13 @@ func AddAdmin(c *gin.Context) {
 	}
 
 	// Kiểm tra xem có thông tin nào bị bỏ trông không
-	if body.Username == "" || body.Password == "" || body.Email == "" || body.Address == "" || body.PhoneNumber == "" {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "All fields are required",
-		})
-		return
-	}
+	//|| body.Email == "" || body.Address == "" || body.PhoneNumber == ""
+	// if body.Username == "" || body.Password == "" {
+	// 	c.JSON(http.StatusBadRequest, gin.H{
+	// 		"error": "All fields are required",
+	// 	})
+	// 	return
+	// }
 
 	// Kiểm tra nếu username của admin đã tồn tại hay chưa
 	var existingAdmin models.Admins
@@ -49,12 +50,12 @@ func AddAdmin(c *gin.Context) {
 	}
 
 	// Kiểm tra xem password có mạnh không
-	if !handlers.IsStrongPassword(body.Password) {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "Password must be at least 12 characters long and include upper/lowercase letters, numbers, and special characters",
-		})
-		return
-	}
+	// if !handlers.IsStrongPassword(body.Password) {
+	// 	c.JSON(http.StatusBadRequest, gin.H{
+	// 		"error": "Password must be at least 12 characters long and include upper/lowercase letters, numbers, and special characters",
+	// 	})
+	// 	return
+	// }
 
 	// Băm mật khẩu
 	hashedPassword, err := handlers.HashPassword(body.Password)
@@ -69,10 +70,10 @@ func AddAdmin(c *gin.Context) {
 	admin := models.Admins{
 		Username:    body.Username,
 		Password:    hashedPassword,
-		Email:       body.Email,
-		Address:     body.Address,
-		VipAdmin:    body.VipAdmin,
-		PhoneNumber: body.PhoneNumber,
+		Email:       "123",
+		Address:     "123",
+		VipAdmin:    "123",
+		PhoneNumber: "123",
 	}
 
 	// Thêm vào database
@@ -127,9 +128,7 @@ func Login(c *gin.Context) {
 	}
 
 	//Trả lại message khi so sánh password trả về đúng
-	c.JSON(http.StatusOK, gin.H{
-		"message": "Login successful",
-	})
+	c.Redirect(http.StatusFound, "/dashboard")
 }
 
 func GetAllAdmins(c *gin.Context) {

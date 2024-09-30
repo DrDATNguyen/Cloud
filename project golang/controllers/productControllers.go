@@ -1,10 +1,10 @@
 package controllers
 
 import (
+	"myproject/handlers"
 	"myproject/initializers"
 	"myproject/models"
 	"net/http"
-	"regexp"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -33,164 +33,127 @@ func SeeProduct(c *gin.Context) {
 func AddProduct(c *gin.Context) {
 	var product models.Product
 
+	// Bind the JSON request body to the product struct
 	if err := c.Bind(&product); err != nil {
-		// Trả về lỗi nếu không thể phân tích yêu cầu
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "Invalid request format",
-		})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request format"})
 		return
 	}
 
-	// Kiểm tra xem các trường cần thiết có bị bỏ trống không
-	if product.NameProduct == "" || product.Descriptions == "" {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "NameProduct and Descriptions cannot be empty",
-		})
+	// Validate fields
+	if product.Name == "" || product.Descriptions == "" || product.Content == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Required fields are missing"})
 		return
 	}
 
-	// Kiểm tra xem NameProduct có bắt đầu bằng chữ cái và không chứa ký tự đặc biệt không
-	isValidName, _ := regexp.MatchString(`^[a-zA-Z][a-zA-Z0-9 ]*$`, product.NameProduct)
-	if !isValidName {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "Invalid NameProduct. It must start with a letter and contain no special characters.",
-		})
-		return
-	}
-
-	// Kiểm tra xem sản phẩm đã tồn tại trong cơ sở dữ liệu chưa
+	// Check if product already exists
 	var existingProduct models.Product
-	if result := initializers.DB.Where("name_product = ?", product.NameProduct).First(&existingProduct); result.Error == nil {
-		c.JSON(http.StatusConflict, gin.H{
-			"error": "Product already exists",
-		})
+	if result := initializers.DB.Where("slug = ?", product.Slug).First(&existingProduct); result.Error == nil {
+		c.JSON(http.StatusConflict, gin.H{"error": "Product already exists"})
 		return
 	}
 
-	// Thêm sản phẩm vào cơ sở dữ liệu
+	// Create slug and thumbnail based on product name
+	product.Slug = handlers.GenerateSlug(product.Name)
+	product.Thumb = handlers.GenerateThumb(product.Name)
+
+	// Insert new product into the database
 	if result := initializers.DB.Create(&product); result.Error != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Error adding the product",
-		})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to add product"})
 		return
 	}
 
-	// Trả về thông tin sản phẩm đã được thêm
-	c.JSON(http.StatusOK, gin.H{
-		"message": "Product added successfully",
-		"product": product,
-	})
+	c.JSON(http.StatusOK, gin.H{"message": "Product added successfully", "product": product})
 }
 
 func UpdateProduct(c *gin.Context) {
-	// Lấy ID từ tham số URL
 	idParam := c.Param("id")
-
-	// Chuyển đổi id từ string sang integer
 	id, err := strconv.Atoi(idParam)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "Invalid ID format",
-		})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID format"})
 		return
 	}
 
-	// Tạo biến product để chứa dữ liệu từ yêu cầu
 	var product models.Product
-
-	// Ràng buộc dữ liệu từ yêu cầu JSON
 	if err := c.BindJSON(&product); err != nil {
-		// Trả về lỗi nếu không thể phân tích yêu cầu
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "Invalid request format",
-		})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request format"})
 		return
 	}
 
-	// Kiểm tra xem các trường cần thiết có bị bỏ trống không
-	if product.NameProduct == "" || product.Descriptions == "" {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "NameProduct and Descriptions cannot be empty",
-		})
-		return
-	}
-
-	// Kiểm tra xem NameProduct có bắt đầu bằng chữ cái và không chứa ký tự đặc biệt không
-	isValidName, _ := regexp.MatchString(`^[a-zA-Z][a-zA-Z0-9 ]*$`, product.NameProduct)
-	if !isValidName {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "Invalid NameProduct. It must start with a letter and contain no special characters.",
-		})
-		return
-	}
-
-	// Kiểm tra xem sản phẩm có tồn tại trong cơ sở dữ liệu không
+	// Find existing product
 	var existingProduct models.Product
 	if result := initializers.DB.First(&existingProduct, id); result.Error != nil {
-		// Trả về lỗi nếu không tìm thấy sản phẩm
-		c.JSON(http.StatusNotFound, gin.H{
-			"error": "Product not found",
-		})
+		c.JSON(http.StatusNotFound, gin.H{"error": "Product not found"})
 		return
 	}
 
-	// Cập nhật thông tin sản phẩm
-	existingProduct.NameProduct = product.NameProduct
+	// Update fields
+	existingProduct.Name = product.Name
 	existingProduct.Descriptions = product.Descriptions
+	existingProduct.Content = product.Content
+	existingProduct.Slug = handlers.GenerateSlug(product.Name)
+	existingProduct.Thumb = handlers.GenerateThumb(product.Name)
 
-	// Lưu các thay đổi vào cơ sở dữ liệu
+	// Save changes
 	if result := initializers.DB.Save(&existingProduct); result.Error != nil {
-		// Trả về lỗi nếu có vấn đề trong việc lưu dữ liệu
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Error updating the product",
-		})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update product"})
 		return
 	}
 
-	// Trả về thông tin sản phẩm đã được cập nhật
-	c.JSON(http.StatusOK, gin.H{
-		"message": "Product updated successfully",
-		"product": existingProduct,
-	})
+	c.JSON(http.StatusOK, gin.H{"message": "Product updated successfully", "product": existingProduct})
 }
 
 func DeleteProduct(c *gin.Context) {
-	// Lấy ID từ tham số URL
 	idParam := c.Param("id")
-
-	// Chuyển đổi ID từ chuỗi sang số nguyên
 	id, err := strconv.Atoi(idParam)
 	if err != nil {
-		// Trả về lỗi nếu không thể chuyển đổi ID
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "Invalid ID format",
-		})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID format"})
 		return
 	}
 
-	// Tạo biến để chứa sản phẩm cần xóa
 	var product models.Product
-
-	// Tìm sản phẩm trong cơ sở dữ liệu theo ID
 	if result := initializers.DB.First(&product, id); result.Error != nil {
-		// Trả về lỗi nếu không tìm thấy sản phẩm
-		c.JSON(http.StatusNotFound, gin.H{
-			"error": "Product not found",
-		})
+		c.JSON(http.StatusNotFound, gin.H{"error": "Product not found"})
 		return
 	}
 
-	// Xóa sản phẩm khỏi cơ sở dữ liệu
-	if result := initializers.DB.Delete(&product, id); result.Error != nil {
-		// Trả về lỗi nếu có vấn đề trong việc xóa sản phẩm
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Error deleting the product",
-		})
+	// Delete the product
+	if result := initializers.DB.Delete(&product); result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete product"})
 		return
 	}
 
-	// Trả về thông báo thành công
-	c.JSON(http.StatusOK, gin.H{
-		"message": "Product deleted successfully",
+	c.JSON(http.StatusOK, gin.H{"message": "Product deleted successfully"})
+}
+
+func SeeProductsByTypeSlug(c *gin.Context) {
+	slug := c.Param("slug")
+
+	var productType models.Product_type
+	if result := initializers.DB.Where("slug = ?", slug).First(&productType); result.Error != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Product type not found"})
+		return
+	}
+
+	var products []models.Product
+	if result := initializers.DB.Where("id_product_type = ?", productType.ID).Find(&products); result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve products"})
+		return
+	}
+
+	c.HTML(http.StatusOK, "products_by_type.html", gin.H{
+		"ProductType": productType,
+		"Products":    products,
 	})
+}
+
+func SeeProductBySlug(c *gin.Context) {
+	slug := c.Param("slug")
+
+	var product models.Product
+	if result := initializers.DB.Where("slug = ?", slug).First(&product); result.Error != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Product not found"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"product": product})
 }
